@@ -143,4 +143,5 @@ public class SessionManager
     {
         return pref.getBoolean(IS_LOGIN, false);
     }
+
 }
