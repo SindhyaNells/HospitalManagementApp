@@ -62,7 +62,7 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
     TextView textViewToolbarTitle;
     TextView textUserName;
     Intent intent;
-    String patient_id;
+    String patient_id, patient_name;
     public static String contactNo;
 
 
@@ -88,6 +88,10 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
         //System.out.println("Emer Contact from shared pref:"+emergencyContact.get(SessionManager.EMERGENCY_CONTACT));
         //contactNo=emergencyContact.get(SessionManager.EMERGENCY_CONTACT);
         patient_id=user.get(SessionManager.KEY_ID);
+        patient_name = user.get(SessionManager.KEY_NAME);
+
+        TextView name = (TextView) findViewById(R.id.username);
+        name.setText(patient_name);
 
         fitbitToken=sessionManager.getFitbitToken();
         fitbitUid=sessionManager.getFitbitUid();

@@ -22,6 +22,7 @@ import com.manage.hospital.hmapp.adapter.NavigationListAdapter;
 import com.manage.hospital.hmapp.data.NavDrawerItem;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class DoctorMainActivity extends AppCompatActivity implements DocDashboardFragmentToActivity {
 
@@ -34,6 +35,7 @@ public class DoctorMainActivity extends AppCompatActivity implements DocDashboar
     private DrawerLayout drawerMenuLayout;
     private Boolean isMenuItemClicked=false;
 
+    String doctor_name;
     Toolbar toolbar;
     TextView textViewToolbarTitle;
     TextView textUserName;
@@ -63,8 +65,11 @@ public class DoctorMainActivity extends AppCompatActivity implements DocDashboar
         textViewToolbarTitle=(TextView)findViewById(R.id.toolbar_title);
 
         sessionManager=new SessionManager(DoctorMainActivity.this);
+        HashMap<String,String> user=sessionManager.getUserDetails();
+        doctor_name = user.get(SessionManager.KEY_NAME);
         textViewToolbarTitle.setText(getResources().getString(R.string.home_activity_title));
         textUserName=(TextView)findViewById(R.id.username);
+        textUserName.setText("Dr. " +doctor_name);
 
         drawerMenuLayout=(DrawerLayout)findViewById(R.id.drawer_menu_layout);
         drawerList = (ListView) findViewById(R.id.drawer_list);
