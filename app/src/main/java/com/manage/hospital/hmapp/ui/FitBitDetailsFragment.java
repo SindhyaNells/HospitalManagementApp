@@ -40,6 +40,7 @@ public class FitBitDetailsFragment extends Fragment {
     private CustomTabsServiceConnection customTabsServiceConnection;
 
     Boolean isAuthorized;
+    SessionManager sessionManager;
 
 
     @Override
@@ -51,6 +52,7 @@ public class FitBitDetailsFragment extends Fragment {
         btnLogout=(Button)view.findViewById(R.id.fitbit_logout_button);
         //layoutFitbitControls=(LinearLayout)view.findViewById(R.id.fitbit_controls_layout);
 
+        sessionManager=new SessionManager(getActivity());
 
         return view;
     }
@@ -86,7 +88,7 @@ public class FitBitDetailsFragment extends Fragment {
                 .setShowTitle(true)
                 .build();
 
-        isAuthorized=sharedPref.getBoolean(FitbitReferences.HAS_ACCESS_TOKEN,false);
+        isAuthorized=sessionManager.hasFitbitToken();
 
         if(!isAuthorized){
             btnLogin.setVisibility(View.VISIBLE);
@@ -132,21 +134,7 @@ public class FitBitDetailsFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        if (!isAuthorized) {
-            getView().setFocusableInTouchMode(true);
-            getView().requestFocus();
-            getView().setOnKeyListener(new View.OnKeyListener() {
-                @Override
-                public boolean onKey(View v, int keyCode, KeyEvent event) {
 
-                    if (event.getAction() == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-                        getFragmentManager().popBackStack();
-                        return true;
-                    }
-                    return false;
-                }
-            });
-        }
     }
 
 }

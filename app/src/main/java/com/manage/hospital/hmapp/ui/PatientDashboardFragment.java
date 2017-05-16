@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 
 import com.manage.hospital.hmapp.Extras.Interface.DocDashboardFragmentToActivity;
 import com.manage.hospital.hmapp.Extras.Interface.PatientDashboardFragmentToActivity;
@@ -54,12 +55,15 @@ public class PatientDashboardFragment extends Fragment implements View.OnClickLi
     FitbitListAdapter fitbitAdapter;
     RecyclerView recyclerViewFitbit;
     SessionManager session;
+    LinearLayout layoutFitbit;
 
-
+    String fToken,userId,currentDate;
 
     Button btnCallEmergency,btnCall911;
 
     public PatientDashboardFragment() {
+
+
 
     }
 
@@ -69,6 +73,8 @@ public class PatientDashboardFragment extends Fragment implements View.OnClickLi
 
 
     }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -90,21 +96,36 @@ public class PatientDashboardFragment extends Fragment implements View.OnClickLi
         btnCall911=(Button)view.findViewById(R.id.btn_call_911);
         btnCall911.setOnClickListener(this);
 
-        String token=sharedPreferences.getString(FitbitReferences.FITBIT_TOKEN,"");
-        String uid=sharedPreferences.getString(FitbitReferences.FITBIT_UID,"");
+        layoutFitbit=(LinearLayout)view.findViewById(R.id.layout_fitbit);
 
-        Calendar calendar=Calendar.getInstance();
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String strDateTime[]=sdf.format(calendar.getTime()).split(" ");
-        String date=strDateTime[0];
+        session=new SessionManager(getActivity());
 
+        fToken=getArguments().getString("token");
+        userId=getArguments().getString("user_id");
+        currentDate=getArguments().getString("date");
 
-        FetchFitbitListTask fitbitTask=new FetchFitbitListTask();
-        fitbitTask.execute(token,uid,date);
+        if(fToken.equals("")) {
+            layoutFitbit.setVisibility(View.GONE);
+        }else{
+            updatePatientDashboard(fToken,userId,currentDate);
+            layoutFitbit.setVisibility(View.VISIBLE);
+        }
 
         return view;
     }
 
+    public void updatePatientDashboard(String token,String user_id,String date){
+        if(!fToken.equals("")) {
+            FetchFitbitListTask fitbitTask = new FetchFitbitListTask();
+            fitbitTask.execute(token, user_id, date);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updatePatientDashboard(fToken,userId,currentDate);
+    }
 
     public void onButtonPressed() {
         if (mListener != null) {
@@ -134,7 +155,7 @@ public class PatientDashboardFragment extends Fragment implements View.OnClickLi
         int id=view.getId();
         if(id==R.id.btn_call_emergency)
         {
-            session = new SessionManager(getActivity());
+
             HashMap<String,String> emergencyContact= session.getEmergencyContact();
             //String contactNo = emergencyContact.get(SessionManager.EMERGENCY_CONTACT);
             Intent callIntent = new Intent(Intent.ACTION_DIAL);
@@ -284,6 +305,20 @@ public class PatientDashboardFragment extends Fragment implements View.OnClickLi
                 if(fitbitAdapter==null) {
                     fitbitAdapter = new FitbitListAdapter(getContext(), result);
                     recyclerViewFitbit.setAdapter(fitbitAdapter);
+
+                    if(result.size()!=0) {
+                        /*SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                        sp.edit().putString(FitbitReferences.FITBIT_SLEEP_DATA, String.valueOf(result.get("totalMinutesAsleep"))).apply();
+                        sp.edit().putString(FitbitReferences.FITBIT_CALORIES_DATA, String.valueOf(result.get("caloriesBurnt"))).apply();
+                        sp.edit().putString(FitbitReferences.FITBIT_HEART_RATE_DATA,String.valueOf(result.get("restingHeartRate")) ).apply();
+                        sp.edit().putString(FitbitReferences.FITBIT_STEPS_DATA,String.valueOf(result.get("steps")) ).apply();*/
+
+                        session.setFitbitData(String.valueOf(result.get("totalMinutesAsleep")),String.valueOf(result.get("caloriesBurnt")),String.valueOf(result.get("restingHeartRate")),String.valueOf(result.get("steps")));
+
+
+                    }
+
+
                 }else{
                     fitbitAdapter.refreshList(result);
                 }

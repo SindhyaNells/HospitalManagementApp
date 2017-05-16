@@ -33,7 +33,10 @@ public class SessionManager
     public static final String EMERGENCY_CONTACT="emergencyContact";
     public static final String EMERGENCY_ID="emergencyID";
 
-
+    public static final String FITBIT_SLEEP_DATA="fitbitSleep";
+    public static final String FITBIT_CALORIES_DATA="fitbitCalories";
+    public static final String FITBIT_HEART_RATE_DATA="fitbitHeartRate";
+    public static final String FITBIT_STEPS_DATA="fitbitSteps";
 
 
     public SessionManager(Context context)
@@ -61,8 +64,19 @@ public class SessionManager
         editor.putString(FITBIT_TOKEN,f3);
         editor.putString(FITBIT_TOKEN_TYPE,f4);
         editor.putString(FITBIT_FULL_AUTH,f5);
+        editor.commit();
 
     }
+
+    public void setFitbitData(String sleep_data,String calories,String heart_rate,String steps){
+
+        editor.putString(FITBIT_SLEEP_DATA,sleep_data);
+        editor.putString(FITBIT_CALORIES_DATA,calories);
+        editor.putString(FITBIT_HEART_RATE_DATA,heart_rate);
+        editor.putString(FITBIT_STEPS_DATA,steps);
+        editor.commit();
+    }
+
 
     public HashMap<String, Boolean>getFitbit()
     {
@@ -72,16 +86,35 @@ public class SessionManager
         return fitbit;
     }
 
-    public HashMap<String, String> getFitbitDetails()
-    {
-        HashMap<String, String> fitbit = new HashMap<String, String>();
-        fitbit.put(FITBIT_UID, pref.getString(FITBIT_UID,null));
-        fitbit.put(FITBIT_TOKEN, pref.getString(FITBIT_TOKEN,null));
-        fitbit.put(FITBIT_TOKEN_TYPE, pref.getString(FITBIT_TOKEN_TYPE,null));
-        fitbit.put(FITBIT_FULL_AUTH, pref.getString(FITBIT_FULL_AUTH,null));
+    public String getFitbitSleepData(){
+        return pref.getString(FITBIT_SLEEP_DATA,"");
+    }
 
-        return fitbit;
+    public String getFitbitCaloriesData(){
+        return pref.getString(FITBIT_CALORIES_DATA,"");
+    }
 
+    public String getFitbitHeartRateData(){
+        return pref.getString(FITBIT_HEART_RATE_DATA,"");
+    }
+
+    public String getFitbitStepsData(){
+        return pref.getString(FITBIT_STEPS_DATA,"");
+    }
+
+    public Boolean hasFitbitToken(){
+        boolean istoken=pref.getBoolean(HAS_ACCESS_TOKEN,false);
+        return istoken;
+    }
+
+    public String getFitbitToken(){
+
+        return pref.getString(FITBIT_TOKEN,"");
+    }
+
+    public String getFitbitUid(){
+
+        return pref.getString(FITBIT_UID,"");
     }
 
 
@@ -89,12 +122,10 @@ public class SessionManager
     {
         if(!this.isLoggedIn())
         {
-            // user is not logged in redirect him to Login Activity
+
             Intent i = new Intent(_context, LoginActivity.class);
-            // Closing all the Activities
             i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            // Staring Login Activity
             _context.startActivity(i);
         }
 

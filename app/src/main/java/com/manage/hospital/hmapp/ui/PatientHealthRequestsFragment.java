@@ -1,9 +1,11 @@
 package com.manage.hospital.hmapp.ui;
 
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -26,6 +28,7 @@ import com.manage.hospital.hmapp.data.HealthDataRequestStructure;
 import com.manage.hospital.hmapp.data.PatientData;
 import com.manage.hospital.hmapp.data.PatientStructure;
 import com.manage.hospital.hmapp.utility.ConfigConstant;
+import com.manage.hospital.hmapp.utility.FitbitReferences;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -53,7 +56,7 @@ public class PatientHealthRequestsFragment extends Fragment implements SwipeRefr
     HealthRequestAdapter requestListAdapter;
     SessionManager sessionManager;
     private String pat_id;
-    RequestsAdapterToRequestFragment requestItemListener;
+    private SharedPreferences fitbitSharedPref;
 
     @Nullable
     @Override
@@ -67,6 +70,12 @@ public class PatientHealthRequestsFragment extends Fragment implements SwipeRefr
         HashMap<String, String> user = sessionManager.getUserDetails();
         pat_id = user.get(SessionManager.KEY_ID);
 
+        //fitbitSharedPref= PreferenceManager.getDefaultSharedPreferences(getActivity());
+
+        Log.d("sleep",sessionManager.getFitbitSleepData());
+        Log.d("heart",sessionManager.getFitbitHeartRateData());
+        Log.d("calories",sessionManager.getFitbitCaloriesData());
+        Log.d("steps",sessionManager.getFitbitStepsData());
 
         recyclerViewHealthRequests=(RecyclerView) root_view.findViewById(R.id.health_req_list_view);
         LinearLayoutManager linearLayoutManager=new LinearLayoutManager(getContext());
@@ -204,15 +213,34 @@ public class PatientHealthRequestsFragment extends Fragment implements SwipeRefr
                     requestListAdapter = new HealthRequestAdapter(getContext(), result);
                     recyclerViewHealthRequests.setAdapter(requestListAdapter);
                 }else{
-                    requestListAdapter.notifyDataSetChanged();
+                    requestListAdapter.refreshList(result);
                 }
                 requestListAdapter.setOnItemClickListener(new RequestsAdapterToRequestFragment() {
                     @Override
                     public void onRequestItemClick(String request_id, String new_status) {
 
-                            RequestStatusUpdateTask requestStatusUpdateTask=new RequestStatusUpdateTask();
-                            requestStatusUpdateTask.execute(request_id,new_status);
+                        if(new_status.equals("accept")) {
+                            if (sessionManager.getFitbitHeartRateData().equals("")) {
+                                new AlertDialog.Builder(getActivity()).setTitle(getResources().getString(R.string.dialog_request_title))
+                                        .setMessage("Please sync fitbit with the application")
+                                        .setPositiveButton(R.string.dialog_health_msg_ok, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                dialogInterface.cancel();
+                                                //updateValues();
+                                            }
+                                        })
+                                        .show();
+                            }else{
+                                RequestStatusUpdateTask requestStatusUpdateTask = new RequestStatusUpdateTask();
+                                requestStatusUpdateTask.execute(request_id, new_status);
+                            }
+                        }else{
 
+                            RequestStatusUpdateTask requestStatusUpdateTask = new RequestStatusUpdateTask();
+                            requestStatusUpdateTask.execute(request_id, new_status);
+
+                        }
                     }
                 });
             }
@@ -292,9 +320,6 @@ public class PatientHealthRequestsFragment extends Fragment implements SwipeRefr
         protected void onPostExecute(Boolean res) {
             displayDialog(res,new_status);
         }
-
-
-
     }
 
     public void displayDialog(Boolean flag,String new_status){
@@ -302,6 +327,13 @@ public class PatientHealthRequestsFragment extends Fragment implements SwipeRefr
         if(flag){
 
             if(new_status.equals("accept")){
+
+
+
+                    PostHealthDataTask healthDataTask = new PostHealthDataTask();
+                    healthDataTask.execute(pat_id, sessionManager.getFitbitSleepData(), sessionManager.getFitbitHeartRateData(), sessionManager.getFitbitCaloriesData(), sessionManager.getFitbitStepsData());
+
+
                 new AlertDialog.Builder(getActivity()).setTitle(getResources().getString(R.string.dialog_request_title))
                         .setMessage("Health data sent to the doctor.")
                         .setPositiveButton(R.string.dialog_health_msg_ok, new DialogInterface.OnClickListener() {
@@ -328,14 +360,87 @@ public class PatientHealthRequestsFragment extends Fragment implements SwipeRefr
                         })
                         .show();
                 getHealthRequests();
+            }
+        }
+    }
+
+    public class PostHealthDataTask extends AsyncTask<String,Void,Boolean> {
+
+        private final String LOG_TAG=PostHealthDataTask.class.getSimpleName();
+
+        String pat_id,sleep_data,heart_rate,calories,steps;
 
 
+        @Override
+        protected Boolean doInBackground(String... param) {
 
+            HttpURLConnection urlConnection=null;
+
+            pat_id=param[0];
+            sleep_data=param[1];
+            heart_rate=param[2];
+            calories=param[3];
+            steps=param[4];
+
+            try {
+                String base_url = ConfigConstant.BASE_URL;
+                final String REQ_STATUS_PATH_PARAM = ConfigConstant.POST_PATIENT_HEALTH_DATA;
+
+
+                Uri apptUpdateUri = Uri.parse(base_url).buildUpon().appendEncodedPath(REQ_STATUS_PATH_PARAM).build();
+
+                URL url = new URL(apptUpdateUri.toString());
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("POST");
+                urlConnection.setRequestProperty("Content-Type","application/json");
+                urlConnection.setDoInput(true);
+                urlConnection.setDoOutput(true);
+                urlConnection.connect();
+
+                try {
+
+                    JSONObject reqObj = new JSONObject();
+                    reqObj.put("patientId",pat_id);
+                    reqObj.put("sleep duration",Double.parseDouble(sleep_data));
+                    reqObj.put("heart rate", Double.parseDouble(heart_rate));
+                    reqObj.put("calories burnt",Double.parseDouble(calories));
+                    reqObj.put("no of steps",Double.parseDouble(steps));
+
+
+                    OutputStreamWriter os = new OutputStreamWriter(urlConnection.getOutputStream());
+                    os.write(reqObj.toString());
+                    os.close();
+
+                    int HttpResult =urlConnection.getResponseCode();
+                    if(HttpResult ==HttpURLConnection.HTTP_OK){
+                        return true;
+                    }
+
+                }catch (JSONException e){
+                    Log.e(LOG_TAG,e.getMessage());
+                }
+
+            }catch (IOException e){
+                Log.e(LOG_TAG,e.getMessage());
+            }finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
             }
 
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean res) {
 
         }
 
+
+
     }
+
+
 
 }

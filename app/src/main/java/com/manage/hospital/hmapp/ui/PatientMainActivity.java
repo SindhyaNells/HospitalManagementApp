@@ -41,7 +41,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 
 public class PatientMainActivity extends AppCompatActivity implements PatientDashboardFragmentToActivity {
@@ -69,6 +71,8 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
     boolean mShouldLog;
     int mCountAccelUpdates;
 
+    String fitbitToken,fitbitUid,currentDate;
+
 
 
     @Override
@@ -79,19 +83,33 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
 
         setListeners();
 
-        if(savedInstanceState==null){
-            Fragment fragment=new PatientDashboardFragment();
-            FragmentManager fragmentManager=getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.patient_content_frame,fragment).commit();
-        }
-
         sessionManager=new SessionManager(PatientMainActivity.this);
         HashMap<String,String> user=sessionManager.getUserDetails();
         //System.out.println("Emer Contact from shared pref:"+emergencyContact.get(SessionManager.EMERGENCY_CONTACT));
         //contactNo=emergencyContact.get(SessionManager.EMERGENCY_CONTACT);
         patient_id=user.get(SessionManager.KEY_ID);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) //ToDo add this in onCreate
+        fitbitToken=sessionManager.getFitbitToken();
+        fitbitUid=sessionManager.getFitbitUid();
+
+        Calendar calendar=Calendar.getInstance();
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String strDateTime[]=sdf.format(calendar.getTime()).split(" ");
+        currentDate=strDateTime[0];
+
+        if(savedInstanceState==null){
+            Fragment fragment=new PatientDashboardFragment();
+            Bundle bundle=new Bundle();
+            bundle.putString("token",fitbitToken);
+            bundle.putString("user_id",fitbitUid);
+            bundle.putString("date",currentDate);
+            fragment.setArguments(bundle);
+
+            FragmentManager fragmentManager=getSupportFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.patient_content_frame,fragment).commit();
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
         {
 
             if (checkSelfPermission(Manifest.permission.SEND_SMS)
@@ -111,12 +129,14 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
 
         new AsyncTaskCheckEmergency().execute(Integer.parseInt(patient_id));
 
-
-
         Intent intent = new Intent(this, FallDetectService.class);
         startService(intent);
 
+        registerReceiver(accelDataReceiver, new IntentFilter(FallDetectService.ACCEL_DATA_NOTIFICATION));
+        registerReceiver(fallDetectionReceiver, new IntentFilter(FallDetectService.FALL_NOTIFICATION));
+
     }
+
 
     private void setListeners(){
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -178,8 +198,17 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(accelDataReceiver, new IntentFilter(FallDetectService.ACCEL_DATA_NOTIFICATION));
-        registerReceiver(fallDetectionReceiver, new IntentFilter(FallDetectService.FALL_NOTIFICATION));
+
+        //PatientDashboardFragment patientFragment=(PatientDashboardFragment) getSupportFragmentManager().findFragmentById(R.id.patient_content_frame);
+        //patientFragment.updatePatientDashboard(fitbitToken,fitbitUid,currentDate);
+
+
+        /*Fragment frag=getSupportFragmentManager().findFragmentById(R.id.patient_content_frame);
+        if(frag instanceof PatientDashboardFragment){
+            PatientDashboardFragment patientFragment=(PatientDashboardFragment)frag;
+            patientFragment.updatePatientDashboard(fitbitToken,fitbitUid,currentDate);
+        }*/
+
     }
 
     @Override

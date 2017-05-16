@@ -16,18 +16,28 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.manage.hospital.hmapp.Extras.Interface.RequestsAdapterToRequestFragment;
 import com.manage.hospital.hmapp.R;
+import com.manage.hospital.hmapp.adapter.HealthRequestAdapter;
+import com.manage.hospital.hmapp.data.HealthData;
+import com.manage.hospital.hmapp.data.HealthDataRequestStructure;
 import com.manage.hospital.hmapp.data.PatientData;
 import com.manage.hospital.hmapp.utility.ConfigConstant;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by sindhya on 5/8/17.
@@ -100,6 +110,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         patientDetailContact.setText(PatientData.getInstance().get(position).getContact_num());
         patientDetailEmail.setText(PatientData.getInstance().get(position).getEmail());
         patientDetailWeight.setText(PatientData.getInstance().get(position).getWeight());
+
     }
 
     public void openHealDataRequestDialog(){
@@ -246,5 +257,129 @@ public class PatientDetailActivity extends AppCompatActivity {
             finish();
         }
     }
+
+
+    public class FetchPatientHealthDataTask extends AsyncTask<String,Void,List<HealthData>> {
+
+        private final String LOG_TAG=FetchPatientHealthDataTask.class.getSimpleName();
+
+        private List<HealthData> getHealthDataListFromJson(String jsonStr) throws JSONException {
+
+            List<HealthData> healthDataList=new ArrayList<>();
+
+            HealthData healthObj;
+            JSONArray jsonArray=new JSONArray(jsonStr);
+
+            for(int i=0;i<jsonArray.length();i++){
+                healthObj=new HealthData(jsonArray.getJSONObject(i));
+                healthDataList.add(healthObj);
+            }
+            return healthDataList;
+        }
+
+
+        @Override
+        protected List<HealthData> doInBackground(String... params) {
+
+
+            HttpURLConnection urlConnection=null;
+            BufferedReader reader=null;
+
+            String healthListJson=null;
+
+            try{
+                String baseUrl= ConfigConstant.BASE_URL;
+                final String PATH_PARAM = ConfigConstant.GET_PATIENT_HEALTH_DATA;
+                final String PAT_ID=params[0];
+
+
+
+                Uri reqUri=Uri.parse(baseUrl).buildUpon().appendEncodedPath(PATH_PARAM).appendEncodedPath(PAT_ID).build();
+
+                URL url=new URL(reqUri.toString());
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+
+
+                InputStream inputStream=urlConnection.getInputStream();
+                StringBuffer buffer=new StringBuffer();
+                if(inputStream==null){
+                    return null;
+                }
+
+                reader=new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+
+                while((line=reader.readLine())!=null){
+                    buffer.append(line+"\n");
+                }
+
+                if(buffer.length()==0){
+                    return null;
+                }
+
+                healthListJson=buffer.toString();
+
+
+                Log.v(LOG_TAG,"HealthDataListStr: "+healthListJson);
+
+            }catch (IOException e){
+
+                Log.e(LOG_TAG,e.getMessage(),e);
+                return null;
+
+            }
+            finally {
+                if(urlConnection!=null){
+                    urlConnection.disconnect();
+                }
+                if(reader!=null){
+                    try{
+                        reader.close();
+                    }catch (final IOException e){
+                        Log.e(LOG_TAG,"Error closing stream",e);
+                    }
+                }
+
+            }
+
+            try{
+                return getHealthDataListFromJson(healthListJson);
+            }catch (JSONException e){
+                Log.e(LOG_TAG,e.getMessage(),e);
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+
+        @Override
+        protected void onPostExecute(List<HealthData> result){
+            if(result!=null){
+
+                /*if(requestListAdapter==null) {
+                    requestListAdapter = new HealthRequestAdapter(getContext(), result);
+                    recyclerViewHealthRequests.setAdapter(requestListAdapter);
+                }else{
+                    requestListAdapter.notifyDataSetChanged();
+                }
+                requestListAdapter.setOnItemClickListener(new RequestsAdapterToRequestFragment() {
+                    @Override
+                    public void onRequestItemClick(String request_id, String new_status) {
+
+                        RequestStatusUpdateTask requestStatusUpdateTask=new RequestStatusUpdateTask();
+                        requestStatusUpdateTask.execute(request_id,new_status);
+
+                    }
+                });*/
+            }
+        }
+    }
+
+
 
 }

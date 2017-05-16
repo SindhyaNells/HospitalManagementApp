@@ -37,6 +37,11 @@ public class HealthRequestAdapter extends RecyclerView.Adapter<HealthRequestAdap
         return new HealthRequestViewHolder(itemView);
     }
 
+    public void refreshList(List<HealthDataRequestStructure> request_list){
+        this.requestList=request_list;
+        notifyDataSetChanged();
+    }
+
     @Override
     public void onBindViewHolder(HealthRequestViewHolder holder, int position) {
 
