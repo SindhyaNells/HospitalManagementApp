@@ -9,6 +9,7 @@ public class ConfigConstant {
     public static final String FITBIT_BASE_URL="http://52.206.7.24:8060";//10.15.8.72//192.168.29.237
     public static final String FITBIT_SUMMARY_ENDPOINT="health/activity/summary";
     public static final String DOC_APPOINTMENT_LIST_ENDPOINT="doctor/appointments";
+    public static final String PAT_APPOINTMENT_LIST_ENDPOINT="patient/appointment";
     public static final String DOC_PATIENT_LIST_ENDPOINT="doctor/patients";
     public static final String APPOINTMENT_STATUS_UPDATE="doctor/appointmentStatus/update";
 

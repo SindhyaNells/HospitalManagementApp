@@ -236,7 +236,7 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
     public void displayActivity(int position){
         switch (position){
             case 1:
-                intent = new Intent(this, ManageAppointmentActivity.class);
+                intent = new Intent(this, PatientAppointmentActivity.class);
                 intent.putExtra("PatientId", patient_id);
                 startActivity(intent);
                 break;

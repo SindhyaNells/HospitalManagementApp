@@ -23,6 +23,9 @@
     <!--Doctor Appointment Activity-->
     <string name="appointment_title">Appointments</string>
 
+    <!--Patient appointment activity-->
+    <string name="pat_appointment_title">Appointments</string>
+
 
     <string-array name="pat_nav_drawer_items">
         <item>Home</item>

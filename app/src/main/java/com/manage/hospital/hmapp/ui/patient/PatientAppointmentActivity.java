@@ -1,4 +1,4 @@
-package com.manage.hospital.hmapp.ui.doctor;
+package com.manage.hospital.hmapp.ui.patient;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,34 +8,35 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
-import com.manage.hospital.hmapp.Extras.Interface.AppointmentFragmentToAppointmentActivity;
 import com.manage.hospital.hmapp.R;
+import com.manage.hospital.hmapp.ui.doctor.AppointmentDetailActivity;
+import com.manage.hospital.hmapp.ui.doctor.AppointmentFragment;
 
 /**
- * Created by sindhya on 4/13/17.
+ * Created by sindhya on 5/17/17.
  */
-public class AppointmentActivity extends AppCompatActivity implements AppointmentFragmentToAppointmentActivity{
+public class PatientAppointmentActivity extends AppCompatActivity implements PatientAppointmentFragment.OnFragmentInteractionListener{
 
 
-    private static final int APPOINTMENT_RESULT_CODE=1;
+    private static final int PAT_APPOINTMENT_RESULT_CODE=12;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_doctor_appointment);
+        setContentView(R.layout.activity_patient_appointment);
 
         ActionBar actionBar=getSupportActionBar();
         if(actionBar!=null) {
-            actionBar.setTitle(getResources().getString(R.string.appointment_title));
+            actionBar.setTitle(getResources().getString(R.string.pat_appointment_title));
             actionBar.setDisplayUseLogoEnabled(true);
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
         if(savedInstanceState==null){
-            Fragment fragment=new AppointmentFragment();
+            Fragment fragment=new PatientAppointmentFragment();
             FragmentManager fragmentManager=getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.frame_appointments,fragment).commit();
+            fragmentManager.beginTransaction().replace(R.id.frame_pat_appointments,fragment).commit();
         }
 
 
@@ -53,24 +54,23 @@ public class AppointmentActivity extends AppCompatActivity implements Appointmen
     }
 
     @Override
-    public void onAppointmentItemClick(int position) {
-        Intent intent=new Intent(AppointmentActivity.this,AppointmentDetailActivity.class);
-        intent.putExtra("position",position);
-        startActivityForResult(intent,APPOINTMENT_RESULT_CODE);
-    }
-
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if(requestCode==APPOINTMENT_RESULT_CODE){
+        if(requestCode==PAT_APPOINTMENT_RESULT_CODE){
             if(resultCode==RESULT_OK){
-                AppointmentFragment appointmentFragment=(AppointmentFragment)getSupportFragmentManager().findFragmentById(R.id.frame_appointments);
-                appointmentFragment.updateAppointmentList();
+                PatientAppointmentFragment appointmentFragment=(PatientAppointmentFragment)getSupportFragmentManager().findFragmentById(R.id.frame_pat_appointments);
+                appointmentFragment.updatePatientAppList();
             }else if(resultCode==RESULT_CANCELED){
 
             }
         }
 
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onFragmentInteraction() {
+        //Intent intent=new Intent(PatientAppointmentActivity.this,AppointmentDetailActivity.class);
+        //startActivityForResult(intent,PAT_APPOINTMENT_RESULT_CODE);
     }
 }
