@@ -72,12 +72,17 @@ public class LauncherActivity extends Activity
                 Intent doc_intent=new Intent(LauncherActivity.this,DoctorMainActivity.class);
                 startActivity(doc_intent);
             }
-            else
+            else if (type != null && type.equals("Patient"))
             {
                 //ToDo goto patient dashboard
                 System.out.println("Goto patient dashboard");
                 Intent pat_intent=new Intent(LauncherActivity.this,PatientMainActivity.class);
                 startActivity(pat_intent);
+            }
+            else
+            {
+                Intent no_intent=new Intent(LauncherActivity.this,LoginActivity.class);
+                startActivity(no_intent);
             }
 
         }

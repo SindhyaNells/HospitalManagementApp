@@ -52,7 +52,7 @@ public class LoginActivity extends Activity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
-
+        System.out.println("Inside login activity");
         //System.setProperty("http.keepAlive", "false");
 
         session = new SessionManager(getApplicationContext());

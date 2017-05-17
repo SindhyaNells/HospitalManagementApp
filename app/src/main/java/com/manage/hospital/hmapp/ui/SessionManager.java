@@ -120,9 +120,10 @@ public class SessionManager
 
     public void checkLogin()
     {
+        System.out.println("Inside checklogin");
         if(!this.isLoggedIn())
         {
-
+            System.out.println("Inside checklogin if statement");
             Intent i = new Intent(_context, LoginActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
