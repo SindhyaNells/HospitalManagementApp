@@ -55,6 +55,9 @@
             android:name=".ui.doctor.AppointmentActivity"
             android:theme="@style/AppTheme" />
         <activity
+            android:name=".ui.patient.PatientAddAppointmentActivity"
+            android:theme="@style/AppTheme" />
+        <activity
             android:name=".ui.patient.PatientAppointmentActivity"
             android:theme="@style/AppTheme" />
         <activity
