@@ -1,17 +1,14 @@
 package com.manage.hospital.hmapp.Extras.fitbit;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.manage.hospital.hmapp.R;
-import com.manage.hospital.hmapp.ui.FitbitActivity;
+import com.manage.hospital.hmapp.ui.patient.FitbitActivity;
 import com.manage.hospital.hmapp.ui.SessionManager;
-import com.manage.hospital.hmapp.utility.FitbitReferences;
 
 /**
  * Created by sindhya on 4/30/17.

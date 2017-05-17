@@ -12,7 +12,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.manage.hospital.hmapp.R;
-import com.manage.hospital.hmapp.ui.AlarmActivity;
+import com.manage.hospital.hmapp.ui.patient.AlarmActivity;
 
 import java.util.Random;
 

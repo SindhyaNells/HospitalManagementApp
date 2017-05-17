@@ -5,9 +5,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
-import com.manage.hospital.hmapp.R;
+import com.manage.hospital.hmapp.ui.doctor.DoctorMainActivity;
+import com.manage.hospital.hmapp.ui.patient.PatientMainActivity;
 
 import java.util.HashMap;
 

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.manage.hospital.hmapp.ui.EditViewActivity">
+    tools:context=".ui.patient.EditViewActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -26,7 +26,7 @@
         android:id="@+id/fragment_edit"
         android:layout_height="match_parent"
         android:layout_width="match_parent"
-        android:name="com.manage.hospital.hmapp.ui.NewTaskActivityFragment"
+        android:name="com.manage.hospital.hmapp.ui.patient.NewTaskActivityFragment"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:layout="@layout/fragment_new_task"></fragment>
 

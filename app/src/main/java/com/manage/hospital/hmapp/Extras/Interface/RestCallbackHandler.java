@@ -1,6 +1,6 @@
 package com.manage.hospital.hmapp.Extras.Interface;
 
-import com.manage.hospital.hmapp.ui.MocRestClient;
+import com.manage.hospital.hmapp.ui.patient.MocRestClient;
 
 /**
  * Created by Apurva on 5/7/2017.

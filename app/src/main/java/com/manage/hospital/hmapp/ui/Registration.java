@@ -1,21 +1,19 @@
 package com.manage.hospital.hmapp.ui;
 
-import android.app.Activity;
 import android.app.DatePickerDialog;
 //import android.app.DialogFragment;
 import android.support.v4.app.DialogFragment;
-import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.RadioButton;
 
 import com.manage.hospital.hmapp.R;
+import com.manage.hospital.hmapp.ui.doctor.DoctorRegistration;
+import com.manage.hospital.hmapp.ui.patient.PatientRegistration;
 
 /**
  * Created by divyankithaRaghavaUrs on 4/14/17.

@@ -4,7 +4,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
-import com.manage.hospital.hmapp.ui.MainActivityFragment;
+import com.manage.hospital.hmapp.ui.patient.MainActivityFragment;
 
 
 public class MainFragmentPagerAdapter extends FragmentPagerAdapter {

@@ -10,7 +10,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fitsSystemWindows="true"
-        tools:context="com.manage.hospital.hmapp.ui.NewTaskActivity">
+        tools:context=".ui.patient.NewTaskActivity">
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
@@ -30,7 +30,7 @@
             xmlns:app="http://schemas.android.com/apk/res-auto"
             xmlns:tools="http://schemas.android.com/tools"
             android:id="@+id/fragment"
-            android:name="com.manage.hospital.hmapp.ui.NewTaskActivityFragment"
+            android:name="com.manage.hospital.hmapp.ui.patient.NewTaskActivityFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"

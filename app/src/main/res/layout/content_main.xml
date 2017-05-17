@@ -9,7 +9,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.manage.hospital.hmapp.ui.AlarmActivity"
+    tools:context=".ui.patient.AlarmActivity"
     tools:showIn="@layout/activity_alarm">
 
     <TimePicker

@@ -10,7 +10,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fitsSystemWindows="true"
-        tools:context="com.manage.hospital.hmapp.ui.ReminderMainActivity">
+        tools:context=".ui.patient.ReminderMainActivity">
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
