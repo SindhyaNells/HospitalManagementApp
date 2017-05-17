@@ -70,7 +70,7 @@ public class PatientAppointmentActivity extends AppCompatActivity implements Pat
 
     @Override
     public void onFragmentInteraction() {
-        //Intent intent=new Intent(PatientAppointmentActivity.this,AppointmentDetailActivity.class);
-        //startActivityForResult(intent,PAT_APPOINTMENT_RESULT_CODE);
+        Intent intent=new Intent(PatientAppointmentActivity.this,PatientAddAppointmentActivity.class);
+        startActivityForResult(intent,PAT_APPOINTMENT_RESULT_CODE);
     }
 }

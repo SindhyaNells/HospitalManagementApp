@@ -26,6 +26,14 @@
     <!--Patient appointment activity-->
     <string name="pat_appointment_title">Appointments</string>
 
+    <!--Patient add appointment-->
+    <string name="apmt_desc">Purpose</string>
+    <string name="apmt_date">Appointment Date</string>
+    <string name="apmt_doctor">Doctor</string>
+    <string name="add_apmt">Add Appointment</string>
+    <string name="new_apmt_title">New Appointment</string>
+    <string name="new_apmt_success_msg">Appointment Created</string>
+    <string name="new_apmt_failure_msg">Appointment is not Created.Try again</string>
 
     <string-array name="pat_nav_drawer_items">
         <item>Home</item>

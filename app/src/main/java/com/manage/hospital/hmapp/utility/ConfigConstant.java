@@ -21,6 +21,9 @@ public class ConfigConstant {
     public static final String GET_PATIENT_HEALTH_DATA="patient/healthData";
     public static final String POST_PATIENT_HEALTH_DATA="patient/healthData/add";
     public static final String GET_PATIENT_REQUEST_DATA="doctor/healthDataRequestDetails";
+    public static final String DOCTOR_LIST_ENDPOINT="patient/doctors";
+
+    public static final String ADD_APPOINTMENT_ENDPOINT="patient/appointment/add";
 
     public static final String FITBIT_AUTH_URL="https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=228BFB&redirect_uri=hospapp%3A%2F%2Fcallbackresponse&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800";
 
