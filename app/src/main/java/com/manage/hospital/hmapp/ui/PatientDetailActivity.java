@@ -42,7 +42,7 @@ import java.util.List;
 /**
  * Created by sindhya on 5/8/17.
  */
-public class PatientDetailActivity extends AppCompatActivity {
+public class PatientDetailActivity extends AppCompatActivity implements View.OnClickListener{
 
     int position;
     TextView patientNameTitle;
@@ -54,9 +54,12 @@ public class PatientDetailActivity extends AppCompatActivity {
     TextView patientDetailEmail;
     TextView patientDetailWeight;
     Button btnRequestHealthData;
+    Button btnViewHealthData;
     SessionManager sessionManager;
     String doc_id;
     String pat_id;
+
+    String reqDataMsg;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -86,17 +89,29 @@ public class PatientDetailActivity extends AppCompatActivity {
         patientDetailEmail=(TextView)findViewById(R.id.card_pat_detail_email);
         patientDetailWeight=(TextView)findViewById(R.id.card_pat_detail_weight);
         btnRequestHealthData=(Button)findViewById(R.id.btn_request_health_data);
-        btnRequestHealthData.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                openHealDataRequestDialog();
-
-            }
-        });
+        btnRequestHealthData.setOnClickListener(this);
+        btnViewHealthData=(Button)findViewById(R.id.btn_view_health_data);
+        btnViewHealthData.setOnClickListener(this);
+        FetchHealthRequestStatus fetchHealthRequestStatus=new FetchHealthRequestStatus();
+        fetchHealthRequestStatus.execute(doc_id,PatientData.getInstance().get(position).getPatient_id());
 
         setValues();
     }
+
+    @Override
+    public void onClick(View view) {
+        int id=view.getId();
+        if(id==R.id.btn_request_health_data){
+
+            openHealDataRequestDialog();
+
+        }else if(id==R.id.btn_view_health_data){
+
+            FetchPatientHealthDataTask fetchPatientDataTask=new FetchPatientHealthDataTask();
+            fetchPatientDataTask.execute(PatientData.getInstance().get(position).getPatient_id());
+        }
+    }
+
 
     public void setValues(){
 
@@ -166,6 +181,8 @@ public class PatientDetailActivity extends AppCompatActivity {
             default: return super.onOptionsItemSelected(item);
         }
     }
+
+
 
     public class AddHealthDataRequestTask extends AsyncTask<String,Void,Boolean> {
 
@@ -268,12 +285,12 @@ public class PatientDetailActivity extends AppCompatActivity {
             List<HealthData> healthDataList=new ArrayList<>();
 
             HealthData healthObj;
-            JSONArray jsonArray=new JSONArray(jsonStr);
+            JSONObject jsonObject=new JSONObject(jsonStr);
 
-            for(int i=0;i<jsonArray.length();i++){
-                healthObj=new HealthData(jsonArray.getJSONObject(i));
-                healthDataList.add(healthObj);
-            }
+
+            healthObj=new HealthData(jsonObject);
+            healthDataList.add(healthObj);
+
             return healthDataList;
         }
 
@@ -361,21 +378,181 @@ public class PatientDetailActivity extends AppCompatActivity {
         protected void onPostExecute(List<HealthData> result){
             if(result!=null){
 
-                /*if(requestListAdapter==null) {
-                    requestListAdapter = new HealthRequestAdapter(getContext(), result);
-                    recyclerViewHealthRequests.setAdapter(requestListAdapter);
-                }else{
-                    requestListAdapter.notifyDataSetChanged();
+                HealthData healthData=result.get(0);
+
+                String reqTitle="",reqData="";
+
+                if(reqDataMsg.toLowerCase().contains("sleep")){
+                    reqTitle="Sleep Time";
+                    reqData=healthData.getSleep_duration();
+                    displayDialog(reqTitle,reqData);
+                }else if(reqDataMsg.toLowerCase().contains("heart")){
+                    reqTitle="Heart Rate";
+                    reqData=healthData.getHeart_rate();
+                    displayDialog(reqTitle,reqData);
+                }else if(reqDataMsg.toLowerCase().contains("calories")){
+                    reqTitle="Calories";
+                    reqData=healthData.getCalories_burnt();
+                    displayDialog(reqTitle,reqData);
+                }else if(reqDataMsg.toLowerCase().contains("steps")){
+                    reqTitle="Steps";
+                    reqData=healthData.getNo_of_steps();
+                    displayDialog(reqTitle,reqData);
+                }else if(reqDataMsg.toLowerCase().contains("health")){
+                    new AlertDialog.Builder(PatientDetailActivity.this).setTitle("Health Data")
+                            .setMessage("Sleep Time : "+healthData.getSleep_duration()+" mins \n"+
+                            "Calories : "+healthData.getCalories_burnt()+" cals\n"+
+                                    "Heart Rate : "+healthData.getHeart_rate()+" bpm\n"+
+                            "Steps : "+healthData.getNo_of_steps()+" steps")
+                            .setPositiveButton(R.string.dialog_health_msg_ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.cancel();
+                                    //updateValues();
+                                }
+                            })
+                            .show();
                 }
-                requestListAdapter.setOnItemClickListener(new RequestsAdapterToRequestFragment() {
-                    @Override
-                    public void onRequestItemClick(String request_id, String new_status) {
 
-                        RequestStatusUpdateTask requestStatusUpdateTask=new RequestStatusUpdateTask();
-                        requestStatusUpdateTask.execute(request_id,new_status);
 
+            }
+
+
+        }
+
+        public void displayDialog(String req_title,String req_msg){
+            new AlertDialog.Builder(PatientDetailActivity.this).setTitle("Health Data")
+                    .setMessage(req_title+" : "+req_msg)
+                    .setPositiveButton(R.string.dialog_health_msg_ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.cancel();
+                            //updateValues();
+                        }
+                    })
+                    .show();
+        }
+    }
+
+
+    public class FetchHealthRequestStatus extends AsyncTask<String,Void,HashMap<String,String>> {
+
+        private final String LOG_TAG=FetchPatientHealthDataTask.class.getSimpleName();
+
+        private HashMap<String,String> getHealthDataListFromJson(String jsonStr) throws JSONException {
+
+            HashMap<String,String> healthDataMap=new HashMap<>();
+
+            JSONArray jsonArray=new JSONArray(jsonStr);
+
+            JSONObject jsonObject=jsonArray.getJSONObject(0);
+            String status=jsonObject.getString("Status");
+            String req_msg=jsonObject.getString("Description");
+
+
+            healthDataMap.put("status",status);
+            healthDataMap.put("Description",req_msg);
+
+            return healthDataMap;
+        }
+
+
+        @Override
+        protected HashMap<String,String> doInBackground(String... params) {
+
+
+            HttpURLConnection urlConnection=null;
+            BufferedReader reader=null;
+
+            String healthListJson=null;
+
+            try{
+                String baseUrl= ConfigConstant.BASE_URL;
+                final String PATH_PARAM = ConfigConstant.GET_PATIENT_REQUEST_DATA;
+                final String DOC_ID=params[0];
+                final String PAT_ID=params[1];
+
+
+
+                Uri reqUri=Uri.parse(baseUrl).buildUpon().appendEncodedPath(PATH_PARAM).appendEncodedPath(DOC_ID).appendEncodedPath(PAT_ID).build();
+
+                URL url=new URL(reqUri.toString());
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+
+
+                InputStream inputStream=urlConnection.getInputStream();
+                StringBuffer buffer=new StringBuffer();
+                if(inputStream==null){
+                    return null;
+                }
+
+                reader=new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+
+                while((line=reader.readLine())!=null){
+                    buffer.append(line+"\n");
+                }
+
+                if(buffer.length()==0){
+                    return null;
+                }
+
+                healthListJson=buffer.toString();
+
+
+                Log.v(LOG_TAG,"HealthDataListStr: "+healthListJson);
+
+            }catch (IOException e){
+
+                Log.e(LOG_TAG,e.getMessage(),e);
+                return null;
+
+            }
+            finally {
+                if(urlConnection!=null){
+                    urlConnection.disconnect();
+                }
+                if(reader!=null){
+                    try{
+                        reader.close();
+                    }catch (final IOException e){
+                        Log.e(LOG_TAG,"Error closing stream",e);
                     }
-                });*/
+                }
+
+            }
+
+            try{
+                return getHealthDataListFromJson(healthListJson);
+            }catch (JSONException e){
+                Log.e(LOG_TAG,e.getMessage(),e);
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+
+        @Override
+        protected void onPostExecute(HashMap<String,String> result){
+            if(result!=null){
+
+                reqDataMsg=result.get("Description");
+                String status=result.get("status");
+                if(status.equals("Requested")){
+                    btnRequestHealthData.setVisibility(View.VISIBLE);
+                    btnViewHealthData.setVisibility(View.GONE);
+                }else if(status.equals("Accepted")||status.equals("Declined")){
+                    btnRequestHealthData.setVisibility(View.GONE);
+                    btnViewHealthData.setVisibility(View.VISIBLE);
+
+                }
+
+
             }
         }
     }

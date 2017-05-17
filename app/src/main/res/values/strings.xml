@@ -166,6 +166,7 @@
      <string name="card_det_doctor_licenseno">License Number</string>
     <string name="card_det_doctor_gender">Gender</string>
     <string name="pat_request_health_btn">Request Health Data</string>
+    <string name="pat_view_health_btn">View Health Data</string>
 
 
     <string name="app_label">Add Emergency Contact</string>
@@ -208,6 +209,8 @@
 
     <!--Patient Health Data Requests-->
     <string name="patient_health_req_title">Health Data Requests</string>
+
+
 
 
 

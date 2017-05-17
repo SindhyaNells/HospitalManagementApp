@@ -27,4 +27,23 @@ public class HealthData {
         }
     }
 
+    public String getPatient_id() {
+        return patient_id;
+    }
+
+    public String getSleep_duration() {
+        return sleep_duration;
+    }
+
+    public String getHeart_rate() {
+        return heart_rate;
+    }
+
+    public String getCalories_burnt() {
+        return calories_burnt;
+    }
+
+    public String getNo_of_steps() {
+        return no_of_steps;
+    }
 }
