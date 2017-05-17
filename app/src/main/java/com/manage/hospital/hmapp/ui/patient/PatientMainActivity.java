@@ -9,9 +9,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.TypedArray;
+import android.location.Location;
+import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -26,6 +31,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.manage.hospital.hmapp.Extras.Interface.PatientDashboardFragmentToActivity;
 import com.manage.hospital.hmapp.Extras.broadcast_receiver.FallDetectService;
 import com.manage.hospital.hmapp.R;
@@ -56,7 +65,7 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
     private NavigationListAdapter menuListAdapter;
     private ListView drawerList;
     private DrawerLayout drawerMenuLayout;
-    private Boolean isMenuItemClicked=false;
+    private Boolean isMenuItemClicked = false;
     SessionManager sessionManager;
 
     Toolbar toolbar;
@@ -68,64 +77,67 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
 
 
     private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final int PERMISSION_REQUEST_CODE_LOCATION = 1;
     long mStartTimestamp;
     boolean mShouldLog;
     int mCountAccelUpdates;
+    LocationManager locationMangaer = null;
 
-    String fitbitToken,fitbitUid,currentDate;
-
+    String fitbitToken, fitbitUid, currentDate;
+    private GoogleApiClient client;
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_patient_main);
 
         setListeners();
 
-        sessionManager=new SessionManager(PatientMainActivity.this);
-        HashMap<String,String> user=sessionManager.getUserDetails();
+        locationMangaer = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        sessionManager = new SessionManager(PatientMainActivity.this);
+        HashMap<String, String> user = sessionManager.getUserDetails();
         //System.out.println("Emer Contact from shared pref:"+emergencyContact.get(SessionManager.EMERGENCY_CONTACT));
         //contactNo=emergencyContact.get(SessionManager.EMERGENCY_CONTACT);
-        patient_id=user.get(SessionManager.KEY_ID);
+        patient_id = user.get(SessionManager.KEY_ID);
         patient_name = user.get(SessionManager.KEY_NAME);
 
         TextView name = (TextView) findViewById(R.id.username);
         name.setText(patient_name);
 
-        fitbitToken=sessionManager.getFitbitToken();
-        fitbitUid=sessionManager.getFitbitUid();
+        fitbitToken = sessionManager.getFitbitToken();
+        fitbitUid = sessionManager.getFitbitUid();
 
-        Calendar calendar=Calendar.getInstance();
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String strDateTime[]=sdf.format(calendar.getTime()).split(" ");
-        currentDate=strDateTime[0];
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String strDateTime[] = sdf.format(calendar.getTime()).split(" ");
+        currentDate = strDateTime[0];
 
-        if(savedInstanceState==null){
-            Fragment fragment=new PatientDashboardFragment();
-            Bundle bundle=new Bundle();
-            bundle.putString("token",fitbitToken);
-            bundle.putString("user_id",fitbitUid);
-            bundle.putString("date",currentDate);
+        if (savedInstanceState == null) {
+            Fragment fragment = new PatientDashboardFragment();
+            Bundle bundle = new Bundle();
+            bundle.putString("token", fitbitToken);
+            bundle.putString("user_id", fitbitUid);
+            bundle.putString("date", currentDate);
             fragment.setArguments(bundle);
 
-            FragmentManager fragmentManager=getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.patient_content_frame,fragment).commit();
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.patient_content_frame, fragment).commit();
         }
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
         {
 
-            if (checkSelfPermission(Manifest.permission.SEND_SMS)
-                    == PackageManager.PERMISSION_DENIED) {
+            if (checkSelfPermission(Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_DENIED && (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED) && (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED))
+            {
 
                 Log.d("permission", "permission denied to SEND_SMS - requesting it");
-                String[] permissions = {Manifest.permission.SEND_SMS};
+                String[] permissions = {Manifest.permission.SEND_SMS,Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
                 requestPermissions(permissions, PERMISSION_REQUEST_CODE);
 
             }
+
         }
 
         mShouldLog = false;
@@ -140,46 +152,48 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
         registerReceiver(accelDataReceiver, new IntentFilter(FallDetectService.ACCEL_DATA_NOTIFICATION));
         registerReceiver(fallDetectionReceiver, new IntentFilter(FallDetectService.FALL_NOTIFICATION));
 
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
 
-    private void setListeners(){
+    private void setListeners() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        textViewToolbarTitle=(TextView)findViewById(R.id.toolbar_title);
+        textViewToolbarTitle = (TextView) findViewById(R.id.toolbar_title);
 
         textViewToolbarTitle.setText(getResources().getString(R.string.home_activity_title));
-        textUserName=(TextView)findViewById(R.id.username);
+        textUserName = (TextView) findViewById(R.id.username);
 
-        drawerMenuLayout=(DrawerLayout)findViewById(R.id.drawer_menu_layout);
+        drawerMenuLayout = (DrawerLayout) findViewById(R.id.drawer_menu_layout);
         drawerList = (ListView) findViewById(R.id.drawer_list);
-        drawerTitleArray=getResources().getStringArray(R.array.pat_nav_drawer_items);
-        drawerIconsArray=getResources().obtainTypedArray(R.array.pat_nav_drawer_icons);
+        drawerTitleArray = getResources().getStringArray(R.array.pat_nav_drawer_items);
+        drawerIconsArray = getResources().obtainTypedArray(R.array.pat_nav_drawer_icons);
 
-        navDrawerItems=new ArrayList<NavDrawerItem>();
+        navDrawerItems = new ArrayList<NavDrawerItem>();
 
         navDrawerItems.add(new NavDrawerItem(drawerTitleArray[0], drawerIconsArray.getResourceId(0, -1)));
         navDrawerItems.add(new NavDrawerItem(drawerTitleArray[1], drawerIconsArray.getResourceId(1, -1)));
         navDrawerItems.add(new NavDrawerItem(drawerTitleArray[2], drawerIconsArray.getResourceId(2, -1)));
-        navDrawerItems.add(new NavDrawerItem(drawerTitleArray[3], drawerIconsArray.getResourceId(3,-1)));
-        navDrawerItems.add(new NavDrawerItem(drawerTitleArray[4], drawerIconsArray.getResourceId(4,-1)));
-        navDrawerItems.add(new NavDrawerItem(drawerTitleArray[5], drawerIconsArray.getResourceId(5,-1)));
-        navDrawerItems.add(new NavDrawerItem(drawerTitleArray[6], drawerIconsArray.getResourceId(6,-1)));
-        navDrawerItems.add(new NavDrawerItem(drawerTitleArray[7], drawerIconsArray.getResourceId(7,-1)));
+        navDrawerItems.add(new NavDrawerItem(drawerTitleArray[3], drawerIconsArray.getResourceId(3, -1)));
+        navDrawerItems.add(new NavDrawerItem(drawerTitleArray[4], drawerIconsArray.getResourceId(4, -1)));
+        navDrawerItems.add(new NavDrawerItem(drawerTitleArray[5], drawerIconsArray.getResourceId(5, -1)));
+        navDrawerItems.add(new NavDrawerItem(drawerTitleArray[6], drawerIconsArray.getResourceId(6, -1)));
+        navDrawerItems.add(new NavDrawerItem(drawerTitleArray[7], drawerIconsArray.getResourceId(7, -1)));
 
-        menuListAdapter=new NavigationListAdapter(getApplicationContext(),navDrawerItems);
+        menuListAdapter = new NavigationListAdapter(getApplicationContext(), navDrawerItems);
         drawerList.setAdapter(menuListAdapter);
 
-        drawerToggle=new ActionBarDrawerToggle(this,drawerMenuLayout,toolbar,R.string.app_name,R.string.app_name){
+        drawerToggle = new ActionBarDrawerToggle(this, drawerMenuLayout, toolbar, R.string.app_name, R.string.app_name) {
 
             public void onDrawerClosed(View view) {
 
-                if(isMenuItemClicked) {
-                    int position=drawerList.getCheckedItemPosition();
+                if (isMenuItemClicked) {
+                    int position = drawerList.getCheckedItemPosition();
                     displayActivity(position);
-                    isMenuItemClicked=false;
+                    isMenuItemClicked = false;
                 }
                 invalidateOptionsMenu();
             }
+
             public void onDrawerOpened(View drawerView) {
                 invalidateOptionsMenu();
             }
@@ -188,11 +202,26 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
         drawerList.setOnItemClickListener(new MenuItemClickListener());
     }
 
-    private class MenuItemClickListener implements ListView.OnItemClickListener{
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id){
 
-            isMenuItemClicked=true;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+
+    }
+
+    private class MenuItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+            isMenuItemClicked = true;
             //drawerList.setItemChecked(position,true);
             //drawerList.setSelection(position);
             drawerMenuLayout.closeDrawer(GravityCompat.START);
@@ -233,23 +262,23 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
         unregisterReceiver(fallDetectionReceiver);
     }
 
-    public void displayActivity(int position){
-        switch (position){
+    public void displayActivity(int position) {
+        switch (position) {
             case 1:
                 intent = new Intent(this, PatientAppointmentActivity.class);
                 intent.putExtra("PatientId", patient_id);
                 startActivity(intent);
                 break;
             case 2:
-                intent=new Intent(PatientMainActivity.this,DoctorActivity.class);
+                intent = new Intent(PatientMainActivity.this, DoctorActivity.class);
                 startActivity(intent);
                 break;
             case 3:
-                intent=new Intent(PatientMainActivity.this,ReminderMainActivity.class);
+                intent = new Intent(PatientMainActivity.this, ReminderMainActivity.class);
                 startActivity(intent);
                 break;
             case 4:
-                intent=new Intent(PatientMainActivity.this,ActivityHealthDataRequests.class);
+                intent = new Intent(PatientMainActivity.this, ActivityHealthDataRequests.class);
                 startActivity(intent);
                 break;
             case 5:
@@ -258,7 +287,7 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
                 startActivity(intent);
                 break;
             case 6:
-                Intent intent=new Intent(PatientMainActivity.this,PatientSourceActivity.class);
+                Intent intent = new Intent(PatientMainActivity.this, PatientSourceActivity.class);
                 startActivity(intent);
                 break;
             case 7:
@@ -286,10 +315,10 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
         public void onReceive(Context context, Intent intent) {
             Double accelData = intent.getDoubleExtra(FallDetectService.ACCEL_DATA_KEY, 0);
 
-            if(mShouldLog) {
+            if (mShouldLog) {
 
                 long currentTime = System.currentTimeMillis();
-                if(mCountAccelUpdates < 100) {
+                if (mCountAccelUpdates < 100) {
                     mCountAccelUpdates++;
                 } else {
                     mCountAccelUpdates = 1;
@@ -301,19 +330,11 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
     };
 
 
-    public void sendSMS()
-    {
-        /*
-        SessionManager session;
-        session = new SessionManager(getApplicationContext());
-        HashMap<String, String> emergency = session.getEmergencyDetails(); 
-        String Ph_No = emergency.get(SessionManager.KEY_ECONTACT); 
-        */
-
+    public void sendSMS() {
+        ArrayList<String> location = getLocation();
         try {
             System.out.println("Em contact: " + contactNo);
-            SmsManager.getDefault().sendTextMessage(contactNo, null, "Alert:Patient has fallen, attention needed!", null, null); //TODO ADD emergency contact number
-
+            SmsManager.getDefault().sendTextMessage(contactNo, null, "Alert:Patient has fallen, attention needed!" + "\n Location:http://maps.google.com/?q=" + location.get(0)+"," +location.get(1), null, null);
             Toast.makeText(getApplicationContext(), "Alert message sent to emergency contact", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -322,6 +343,22 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
             dialog.show();
         }
 
+    }
+
+    public ArrayList<String> getLocation() {
+
+
+        Location currentlocation = locationMangaer.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Double lat = currentlocation.getLatitude();
+        Double lng = currentlocation.getLongitude();
+        String lat_str = lat.toString();
+        String lng_str = lng.toString();
+
+        ArrayList<String> location = new ArrayList();
+        location.add(0, lat_str);
+        location.add(1, lng_str);
+
+        return location;
     }
 
 
@@ -341,66 +378,54 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
         HttpResponse response;
         SessionManager session;
         ArrayList<String> emergency = new ArrayList<String>();
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
         }
 
         @Override
-        protected ArrayList doInBackground(Integer... params)
-        {
+        protected ArrayList doInBackground(Integer... params) {
             try {
 
 
-                String Url= ConfigConstant.BASE_URL+ConfigConstant.PATIENT_EMERGENCY+params[0];
+                String Url = ConfigConstant.BASE_URL + ConfigConstant.PATIENT_EMERGENCY + params[0];
                 HttpGet get = new HttpGet(Url);
                 HttpClient httpClient = new DefaultHttpClient();
                 response = httpClient.execute(get);
                 System.out.println("Reached after coming back from Backend API");
-                if (response.getStatusLine().getStatusCode() != 200)
-                {
+                if (response.getStatusLine().getStatusCode() != 200) {
                     throw new RuntimeException("Failed: HTTP error code :" + response.getStatusLine().getStatusCode());
-                }
-                else
-                {
+                } else {
                     HttpEntity e = response.getEntity();
                     String i = EntityUtils.toString(e);
                     System.out.println(i);
                     JSONObject j = new JSONObject(i);
-                    if(j.length()==0)
-                    {
+                    if (j.length() == 0) {
                         System.out.println("No emergency contact");
-                    }
-                    else
-                    {
+                    } else {
                         emergency.add(j.getString("Contact"));
                         emergency.add(j.getString("Dependent_Id"));
                     }
                 }
-            }
-            catch(Exception x)
-            {
-                throw new RuntimeException("Error from get emergency contact api",x);
+            } catch (Exception x) {
+                throw new RuntimeException("Error from get emergency contact api", x);
             }
 
             return emergency;
         }
 
         @Override
-        protected void onPostExecute(ArrayList E)
-        {
+        protected void onPostExecute(ArrayList E) {
             super.onPostExecute(E);
-            if(!E.isEmpty())
-            {
+            if (!E.isEmpty()) {
                 session = new SessionManager(getApplicationContext());
                 System.out.println(E.get(0).toString() + E.get(1).toString());
                 session.createEmergencyContact(E.get(0).toString(), E.get(1).toString());
-                HashMap<String,String> emergencyContact=sessionManager.getEmergencyContact();
+                HashMap<String, String> emergencyContact = sessionManager.getEmergencyContact();
                 //contactNo = emergencyContact.get(SessionManager.EMERGENCY_CONTACT);
                 contactNo = E.get(0).toString();
-            }
-            else
-            {
+            } else {
                 //AlertDialogManager alert = new AlertDialogManager();
                 //alert.showAlertDialog(PatientMainActivity.this, "Kindly Add Emergency Contact!", "Navigate to Emergency Contact on the Side Menu", false);
 
@@ -410,7 +435,7 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 dialogInterface.cancel();
-                                Intent intent=new Intent(PatientMainActivity.this,ManageEmergencyContactActivity.class);
+                                Intent intent = new Intent(PatientMainActivity.this, ManageEmergencyContactActivity.class);
                                 intent.putExtra("PatientId", patient_id);
                                 startActivity(intent);
                             }

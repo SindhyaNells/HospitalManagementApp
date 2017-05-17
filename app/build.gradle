@@ -31,4 +31,5 @@ dependencies {
     compile 'com.android.support:customtabs:24.1.1'
     compile 'com.mobsandgeeks:android-saripaar:2.0.3'
     testCompile 'junit:junit:4.12'
+    compile 'com.google.android.gms:play-services-appindexing:8.4.0'
 }
