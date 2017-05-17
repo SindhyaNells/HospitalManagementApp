@@ -12,6 +12,7 @@ import com.manage.hospital.hmapp.Extras.Interface.AppointmentAdapterToAppointmen
 import com.manage.hospital.hmapp.data.AppointmentStructure;
 import com.manage.hospital.hmapp.R;
 
+import java.text.Format;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -64,7 +65,7 @@ public class AppointmentListAdapter extends RecyclerView.Adapter<AppointmentList
 
 
     private String convertDate(String input_date){
-        SimpleDateFormat inputDateFormat=new SimpleDateFormat("yyyy-mm-dd");
+        SimpleDateFormat inputDateFormat=new SimpleDateFormat("yyyy-MM-dd");
         Date p_date=null;
         try{
             p_date=inputDateFormat.parse(input_date);
@@ -72,7 +73,7 @@ public class AppointmentListAdapter extends RecyclerView.Adapter<AppointmentList
             e.printStackTrace();
         }
 
-        SimpleDateFormat finalDateFormat=new SimpleDateFormat("MMM dd, yyyy");
+        Format finalDateFormat=new SimpleDateFormat("MMM dd yyyy");
         String finalDate=finalDateFormat.format(p_date);
         return finalDate;
     }
