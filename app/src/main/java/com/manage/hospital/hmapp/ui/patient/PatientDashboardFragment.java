@@ -95,7 +95,7 @@ public class PatientDashboardFragment extends Fragment implements View.OnClickLi
         userId=getArguments().getString("user_id");
         currentDate=getArguments().getString("date");
 
-        if(fToken.equals("")) {
+        if(fToken.equals("")||fToken==null) {
             layoutFitbit.setVisibility(View.GONE);
         }else{
             updatePatientDashboard(fToken,userId,currentDate);
@@ -106,17 +106,13 @@ public class PatientDashboardFragment extends Fragment implements View.OnClickLi
     }
 
     public void updatePatientDashboard(String token,String user_id,String date){
-        if(!fToken.equals("")) {
+        if(!token.equals("")) {
+
             FetchFitbitListTask fitbitTask = new FetchFitbitListTask();
             fitbitTask.execute(token, user_id, date);
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        updatePatientDashboard(fToken,userId,currentDate);
-    }
 
     public void onButtonPressed() {
         if (mListener != null) {
@@ -294,7 +290,7 @@ public class PatientDashboardFragment extends Fragment implements View.OnClickLi
             if(result!=null){
 
                 if(fitbitAdapter==null) {
-                    fitbitAdapter = new FitbitListAdapter(getContext(), result);
+                    fitbitAdapter = new FitbitListAdapter(getActivity(), result);
                     recyclerViewFitbit.setAdapter(fitbitAdapter);
 
                     if(result.size()!=0) {

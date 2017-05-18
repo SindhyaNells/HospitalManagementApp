@@ -233,8 +233,11 @@ public class PatientMainActivity extends AppCompatActivity implements PatientDas
     protected void onResume() {
         super.onResume();
 
-        //PatientDashboardFragment patientFragment=(PatientDashboardFragment) getSupportFragmentManager().findFragmentById(R.id.patient_content_frame);
-        //patientFragment.updatePatientDashboard(fitbitToken,fitbitUid,currentDate);
+        fitbitToken = sessionManager.getFitbitToken();
+        fitbitUid = sessionManager.getFitbitUid();
+
+        PatientDashboardFragment patientFragment=(PatientDashboardFragment) getSupportFragmentManager().findFragmentById(R.id.patient_content_frame);
+        patientFragment.updatePatientDashboard(fitbitToken,fitbitUid,currentDate);
 
 
         /*Fragment frag=getSupportFragmentManager().findFragmentById(R.id.patient_content_frame);
